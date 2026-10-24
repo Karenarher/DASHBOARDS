@@ -1,0 +1,1352 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <!-- Hace que la interfaz se adapte a computadores y tabletas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Mantenimiento | IDPHU</title>
+
+  <!-- Biblioteca para construir gráficos interactivos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ===== 1. SISTEMA VISUAL Y COLORES ===== */
+    :root {
+      --navy: #17324d;
+      --blue: #2563eb;
+      --teal: #0f766e;
+      --green: #16a34a;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --bg: #f3f6fa;
+      --card: #ffffff;
+      --text: #243247;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    button, input, select { font: inherit; }
+
+    button { cursor: pointer; }
+
+    /* ===== 2. ESTRUCTURA PRINCIPAL ===== */
+    .app {
+      display: grid;
+      grid-template-columns: 230px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background: var(--navy);
+      color: white;
+      padding: 25px 17px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .brand {
+      padding: 4px 8px 20px;
+      border-bottom: 1px solid #ffffff30;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      background: #ffffff18;
+      border-radius: 12px;
+      font-size: 22px;
+      margin-bottom: 13px;
+    }
+
+    .brand h2 { font-size: 17px; margin: 0 0 6px; }
+    .brand p { color: #cbd5e1; font-size: 11px; margin: 0; }
+
+    .nav-label {
+      color: #aebed0;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      margin: 0 8px 8px;
+    }
+
+    .nav-btn {
+      display: flex;
+      width: 100%;
+      text-align: left;
+      border: 0;
+      border-radius: 9px;
+      padding: 12px;
+      color: #dbe5f0;
+      background: transparent;
+      margin-bottom: 5px;
+      gap: 10px;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      color: white;
+      background: #ffffff1b;
+    }
+
+    .sidebar-note {
+      margin-top: auto;
+      font-size: 11px;
+      color: #cbd5e1;
+      line-height: 1.7;
+      padding: 12px 8px;
+    }
+
+    main { min-width: 0; padding: 28px; }
+
+    /* ===== 3. ENCABEZADO ===== */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+    }
+
+    h1 { font-size: 27px; margin: 7px 0; color: var(--navy); }
+    .subtitle { color: var(--muted); margin: 0; line-height: 1.6; }
+
+    .top-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn:hover { filter: brightness(.97); }
+
+    /* ===== 4. FILTROS ===== */
+    .filters {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 17px;
+      margin-bottom: 20px;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .section-heading h2 { font-size: 15px; margin: 0; }
+    .section-heading span { color: var(--muted); font-size: 12px; }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 750;
+      margin-bottom: 7px;
+      color: var(--muted);
+    }
+
+    .field input, .field select {
+      width: 100%;
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      color: var(--text);
+    }
+
+    /* ===== 5. TARJETAS KPI ===== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 19px;
+      min-width: 0;
+      box-shadow: 0 3px 12px #17324d05;
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .kpi-label { color: var(--muted); font-size: 12px; font-weight: 650; }
+    .kpi-icon { font-size: 19px; }
+    .kpi-value { font-size: 30px; font-weight: 800; margin: 16px 0 8px; color: var(--navy); }
+    .kpi-foot { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    .accent-blue { border-top: 3px solid var(--blue); }
+    .accent-green { border-top: 3px solid var(--green); }
+    .accent-orange { border-top: 3px solid var(--orange); }
+    .accent-teal { border-top: 3px solid var(--teal); }
+
+    /* ===== 6. PANELES DE GRÁFICOS ===== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 20px;
+      min-width: 0;
+    }
+
+    .panel h2 { font-size: 15px; margin: 0 0 6px; }
+    .panel p { color: var(--muted); font-size: 12px; margin: 0 0 17px; line-height: 1.5; }
+    .chart-wrap { height: 280px; position: relative; }
+
+    /* ===== 7. PESTAÑAS / SLIDES ===== */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .slide-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .slide-dot {
+      padding: 9px 13px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 8px;
+    }
+
+    .slide-dot.active { background: var(--navy); color: white; }
+
+    /* ===== 8. TABLA DE REGISTROS ===== */
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; min-width: 950px; }
+
+    th {
+      text-align: left;
+      padding: 12px 10px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      white-space: nowrap;
+    }
+
+    td {
+      border-top: 1px solid var(--border);
+      padding: 12px 10px;
+      font-size: 12px;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    tbody tr:hover { background: #f8fafc; }
+
+    .pill {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .pill-green { background: #dcfce7; color: #166534; }
+    .pill-red { background: #fee2e2; color: #991b1b; }
+    .pill-orange { background: #ffedd5; color: #9a3412; }
+    .pill-blue { background: #dbeafe; color: #1d4ed8; }
+    .pill-gray { background: #e2e8f0; color: #475569; }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    /* ===== 9. IMPORTACIÓN Y ESTADO ===== */
+    .import-box {
+      border: 1px dashed #94a3b8;
+      background: #f8fafc;
+      padding: 18px;
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+
+    .import-box p { color: var(--muted); line-height: 1.6; }
+
+    .notice {
+      padding: 12px 15px;
+      border-radius: 9px;
+      background: #eff6ff;
+      color: #1e40af;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .empty { text-align: center; padding: 35px; color: var(--muted); }
+
+    footer { padding: 22px 0 4px; color: var(--muted); font-size: 11px; }
+
+    /* ===== 10. DISEÑO RESPONSIVE ===== */
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 190px minmax(0, 1fr); }
+      main { padding: 20px; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      .app { display: block; }
+      .sidebar { padding: 13px; gap: 12px; }
+      .brand { padding-bottom: 10px; }
+      .brand-mark { display: none; }
+      .sidebar nav { display: flex; gap: 5px; overflow-x: auto; }
+      .nav-label, .sidebar-note { display: none; }
+      .nav-btn { width: auto; min-width: max-content; margin: 0; }
+      main { padding: 15px; }
+      h1 { font-size: 22px; }
+      .charts-grid { grid-template-columns: 1fr; }
+      .filter-grid { grid-template-columns: 1fr 1fr; }
+      .kpi { padding: 14px; }
+      .kpi-value { font-size: 25px; }
+    }
+
+    @media print {
+      .sidebar, .top-actions, .filters, .slide-controls, .pagination,
+      .import-box, .no-print { display: none !important; }
+      .app { display: block; }
+      main { padding: 0; }
+      .view { display: block !important; page-break-after: always; }
+      body { background: white; }
+      .panel, .kpi { break-inside: avoid; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- Menú lateral: agrupa las vistas mediante proximidad y similitud -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">⚙</div>
+      <h2>IDPHU Campestre</h2>
+      <p>Gestión de mantenimiento</p>
+    </div>
+
+    <nav>
+      <div class="nav-label">MENÚ PRINCIPAL</div>
+      <button class="nav-btn active" data-view="resumen">▦ Resumen ejecutivo</button>
+      <button class="nav-btn" data-view="analisis">▥ Análisis y tendencias</button>
+      <button class="nav-btn" data-view="registros">☷ Registro de actividades</button>
+      <button class="nav-btn" data-view="datos">⇧ Datos e importación</button>
+    </nav>
+
+    <div class="sidebar-note">
+      <strong>Sistema de mantenimiento</strong><br>
+      Información para seguimiento operativo y toma de decisiones.
+    </div>
+  </aside>
+
+  <main>
+    <!-- Encabezado general -->
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">Indicadores de gestión · IDPHU</div>
+        <h1 id="pageTitle">Resumen ejecutivo</h1>
+        <p class="subtitle">Seguimiento de mantenimiento preventivo, correctivo y proyectos.</p>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" onclick="window.print()">Imprimir / PDF</button>
+        <button class="btn btn-primary" onclick="exportCSV()">Descargar datos CSV</button>
+      </div>
+    </header>
+
+    <!-- Los filtros son globales: actualizan todas las vistas -->
+    <section class="filters">
+      <div class="section-heading">
+        <h2>Filtros de análisis</h2>
+        <button class="btn" onclick="resetFilters()">Restablecer filtros</button>
+      </div>
+
+      <div class="filter-grid">
+        <div class="field">
+          <label for="search">Buscar actividad o responsable</label>
+          <input id="search" type="search" placeholder="Ej. bomba, Orlando...">
+        </div>
+        <div class="field">
+          <label for="typeFilter">Tipo de actividad</label>
+          <select id="typeFilter">
+            <option value="">Todos los tipos</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="locationFilter">Ubicación</label>
+          <select id="locationFilter">
+            <option value="">Todas las ubicaciones</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="statusFilter">Estado</label>
+          <select id="statusFilter">
+            <option value="">Todos los estados</option>
+            <option value="done">Realizadas (SI)</option>
+            <option value="pending">Pendientes / sin confirmar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fromDate">Fecha inicial de reporte</label>
+          <input id="fromDate" type="date">
+        </div>
+        <div class="field">
+          <label for="toDate">Fecha final de reporte</label>
+          <input id="toDate" type="date">
+        </div>
+        <div class="field">
+          <label for="yearFilter">Año de reporte</label>
+          <select id="yearFilter">
+            <option value="">Todos los años</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="sortFilter">Orden de los registros</label>
+          <select id="sortFilter">
+            <option value="desc">Más recientes primero</option>
+            <option value="asc">Más antiguos primero</option>
+            <option value="activity">Nombre de actividad</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Navegación por vistas, útil para presentar el dashboard como diapositivas -->
+    <div class="slide-controls no-print">
+      <button class="slide-dot active" data-view="resumen">01 · Resumen</button>
+      <button class="slide-dot" data-view="analisis">02 · Tendencias</button>
+      <button class="slide-dot" data-view="registros">03 · Actividades</button>
+      <button class="slide-dot" data-view="datos">04 · Datos</button>
+    </div>
+
+    <!-- ===== VISTA 1: RESUMEN EJECUTIVO ===== -->
+    <section id="resumen" class="view active">
+      <div class="kpi-grid">
+        <article class="kpi accent-blue">
+          <div class="kpi-top">
+            <span class="kpi-label">Actividades registradas</span>
+            <span class="kpi-icon">▤</span>
+          </div>
+          <div class="kpi-value" id="kTotal">0</div>
+          <div class="kpi-foot">Registros dentro de los filtros seleccionados.</div>
+        </article>
+
+        <article class="kpi accent-green">
+          <div class="kpi-top">
+            <span class="kpi-label">Realizadas confirmadas</span>
+            <span class="kpi-icon">✓</span>
+          </div>
+          <div class="kpi-value" id="kDone">0</div>
+          <div class="kpi-foot" id="kDoneFoot">Porcentaje sobre el total.</div>
+        </article>
+
+        <article class="kpi accent-orange">
+          <div class="kpi-top">
+            <span class="kpi-label">Pendientes / por confirmar</span>
+            <span class="kpi-icon">◷</span>
+          </div>
+          <div class="kpi-value" id="kPending">0</div>
+          <div class="kpi-foot">Incluye registros sin confirmación de cierre.</div>
+        </article>
+
+        <article class="kpi accent-teal">
+          <div class="kpi-top">
+            <span class="kpi-label">Cumplimiento de duración</span>
+            <span class="kpi-icon">◉</span>
+          </div>
+          <div class="kpi-value" id="kTime">—</div>
+          <div class="kpi-foot">Actividades con duración real y programada informadas.</div>
+        </article>
+      </div>
+
+      <div class="charts-grid">
+        <article class="panel">
+          <h2>Evolución mensual de actividades</h2>
+          <p>Gráfico de líneas: permite observar tendencias, variaciones y patrones de reporte.</p>
+          <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+        </article>
+
+        <article class="panel">
+          <h2>Distribución por tipo de actividad</h2>
+          <p>Gráfico de barras: compara la cantidad de actividades preventivas, correctivas y proyectos.</p>
+          <div class="chart-wrap"><canvas id="typeChart"></canvas></div>
+        </article>
+
+        <article class="panel">
+          <h2>Estado de ejecución</h2>
+          <p>Compara las actividades confirmadas como realizadas con las que requieren seguimiento.</p>
+          <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+        </article>
+
+        <article class="panel">
+          <h2>Duración programada frente a real</h2>
+          <p>Compara los tiempos informados por tipo. Solo incluye registros con ambos valores numéricos.</p>
+          <div class="chart-wrap"><canvas id="durationChart"></canvas></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===== VISTA 2: ANÁLISIS ===== -->
+    <section id="analisis" class="view">
+      <div class="notice">
+        Utiliza esta vista para identificar concentraciones de trabajo, tipos de mantenimiento predominantes y necesidades de planificación. Las comparaciones dependen de la calidad de las fechas y duraciones registradas.
+      </div>
+
+      <div class="charts-grid">
+        <article class="panel">
+          <h2>Actividades por ubicación</h2>
+          <p>Clasificación de las ubicaciones con más registros en la selección actual.</p>
+          <div class="chart-wrap"><canvas id="locationChart"></canvas></div>
+        </article>
+
+        <article class="panel">
+          <h2>Tiempo programado y real por mes</h2>
+          <p>Visualiza la evolución de las duraciones registradas. No representa horas si la base no define esa unidad.</p>
+          <div class="chart-wrap"><canvas id="monthlyDurationChart"></canvas></div>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="section-heading">
+          <h2>Hallazgos para la gestión</h2>
+          <span>Generados a partir de los datos filtrados</span>
+        </div>
+        <div id="insights"></div>
+      </article>
+    </section>
+
+    <!-- ===== VISTA 3: TABLA DETALLADA ===== -->
+    <section id="registros" class="view">
+      <article class="panel">
+        <div class="section-heading">
+          <div>
+            <h2>Registro de actividades de mantenimiento</h2>
+            <span id="tableSummary">Consulta detallada de los registros.</span>
+          </div>
+          <button class="btn btn-primary" onclick="exportCSV()">Exportar selección</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Actividad</th>
+                <th>Tipo</th>
+                <th>Ubicación</th>
+                <th>Reporte</th>
+                <th>Personal asignado</th>
+                <th>Inicio</th>
+                <th>Programado</th>
+                <th>Real</th>
+                <th>Entrega</th>
+                <th>Estado</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <span id="pageInfo">Página 1</span>
+          <div>
+            <button class="btn" onclick="changePage(-1)">Anterior</button>
+            <button class="btn" onclick="changePage(1)">Siguiente</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===== VISTA 4: IMPORTAR / ADMINISTRAR DATOS ===== -->
+    <section id="datos" class="view">
+      <article class="panel">
+        <h2>Importar base histórica de mantenimiento</h2>
+        <p>Importa el archivo CSV exportado desde Excel. La importación reemplaza los registros de demostración o la importación anterior en esta sesión.</p>
+
+        <div class="import-box">
+          <strong>Selecciona un archivo CSV</strong>
+          <p>Guarda tu Excel como CSV UTF-8. Se recomienda que la primera fila contenga los encabezados originales de las columnas.</p>
+          <input type="file" id="fileInput" accept=".csv,.txt">
+          <p id="importStatus" role="status">La información inicial es una muestra de demostración.</p>
+        </div>
+
+        <h2>O pega los datos desde Excel</h2>
+        <p>Copia el rango completo, incluidos los encabezados, y pégalo aquí. Se admiten columnas separadas por tabulaciones.</p>
+        <textarea id="pasteArea" rows="7" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;" placeholder="Pega aquí las filas copiadas desde Excel..."></textarea>
+
+        <div class="top-actions" style="margin-top:12px">
+          <button class="btn btn-primary" onclick="importPastedData()">Procesar datos pegados</button>
+          <button class="btn" onclick="downloadTemplate()">Descargar plantilla CSV</button>
+          <button class="btn" onclick="resetDemo()">Volver a la muestra</button>
+        </div>
+
+        <div class="notice" style="margin-top:18px">
+          <strong>Privacidad y almacenamiento:</strong> este artefacto procesa los datos localmente en el navegador. No incluye una base de datos en servidor. Los cambios e importaciones no se guardan permanentemente al cerrar o recargar la página.
+        </div>
+
+        <h2>Campos reconocidos</h2>
+        <p>Actividad, tipo, ubicación, fecha de reporte, responsable del reporte, personal asignado, fecha de inicio, tiempo programado, tiempo real, fecha de entrega, realizado y observaciones.</p>
+      </article>
+    </section>
+
+    <footer>
+      IDPHU Campestre Bilingüe · Dashboard de mantenimiento · Herramienta de apoyo a la gestión.
+      Los indicadores reflejan únicamente los registros cargados y filtrados.
+    </footer>
+  </main>
+</div>
+
+<script>
+  /* ==========================================================
+     1. DATOS DE DEMOSTRACIÓN
+     Campos: actividad, tipo, ubicación, reporte, reporta,
+     personal, inicio, programado, real, entrega, realizado,
+     observaciones.
+     Para analizar toda la historia, importa el CSV completo.
+     ========================================================== */
+
+  const DEMO = [
+    ["Destapar tubería de desagüe del baño","CORRECTIVA","Kiosco 18","01/10/2026","Keidys Acosto","","","","","","",""],
+    ["Cambio de pluma de jardín","CORRECTIVA","Kiosco 11","07/05/2026","Orlando Molina","Orlando Molina","07/05/2026","1","1","07/05/2026","SI",""],
+    ["Destapar registro de desagüe","CORRECTIVA","Oficina administrativa","06/05/2026","Ketty Mercado","De acuerdo a rotación","06/05/2026","12","","","","Se necesitó compra de materiales 07/05/2026"],
+    ["Mantenimiento correctivo","CORRECTIVA","Subestación eléctrica (Arriba)","06/05/2026","Cristina Padilla","IMANPRO","06/05/2026","1","1","06/05/2026","SI",""],
+    ["Mantenimiento y recarga de extintores","PREVENTIVA","Todas las instalaciones","29/04/2026","Coordinadora de Calidad","SEGURITEC","02/05/2026","4","4","06/05/2026","SI",""],
+    ["Cambio de bomba sumergible","CORRECTIVA","Pozo","26/04/2026","Vicerrector administrativo","T1A, T1B, T2, T3 y José Moreno","27/04/2026","1","1","27/04/2026","SI","Se necesitó compra de zunchos y cinta aislante"],
+    ["Destapar registro de desagüe","CORRECTIVA","Kiosco 11","22/04/2026","Ducleys Henao","Ducleys Henao; rotación de personal","22/04/2026","15","12","05/05/2026","SI","Se necesitó compra de materiales 22/04/2026"],
+    ["Cambio de pluma mezcladora de lavamanos","CORRECTIVA","Kiosco","21/04/2026","Ducleys Henao","Ducleys Henao","24/04/2026","1","1","24/04/2026","SI","Se necesitó compra de materiales"],
+    ["Cambio de torre de llenado de sanitario","CORRECTIVA","Kiosco 7","21/04/2026","Ducleys Henao","Ducleys Henao","22/04/2026","1","1","22/04/2026","SI",""],
+    ["Inspección de extintores","PREVENTIVA","Todas las instalaciones","20/04/2026","Coordinadora de Calidad","SEGURITEC","21/04/2026","1","1","21/04/2026","SI",""],
+    ["Revisión y limpieza de sensores","CORRECTIVA","Kiosco 38","20/04/2026","Naylel Añez","Josie Morales","21/04/2026","1","1","21/04/2026","SI","Se sugiere cambio de sensores en el próximo mantenimiento preventivo"],
+    ["Construcción e instalación de bases de mesas de ping pong","PROYECTO","Parque de la vitamina N","10/04/2026","Vicerrector administrativo","Juan Carlos Vizcaíno","14/04/2026","15","14","29/04/2026","SI",""],
+    ["Revisión de aire acondicionado y cambio de contactor","CORRECTIVA","Kiosco 4","06/04/2026","Rosa Hasbun","Josie Morales","06/04/2026","1","2","07/04/2026","SI","Se instala contactor nuevo al día siguiente"],
+    ["Mantenimiento de aires acondicionados","PREVENTIVA","Todas las instalaciones","27/03/2026","Vicerrector administrativo","Josie Morales","30/03/2026","6","6","04/04/2026","SI",""],
+    ["Mantenimiento de aire acondicionado","CORRECTIVA","Enfermería","16/03/2026","Jennifer Gómez","Josie Morales","16/03/2026","1","1","16/03/2026","SI","Se realizó lavado del aire acondicionado"],
+    ["Poda de palmas de coco","PREVENTIVA","Divino Niño, Kiosco 29 y enfermería","13/03/2026","Vicerrector administrativo","Orlando Molina; Andrés Fontalvo; Ducleys Henao; Pedro Gutiérrez","14/03/2026","1","1","14/03/2026","SI","Se necesitó alquiler de escalera y cuerdas"],
+    ["Limpieza de palmas y ramas secas","PREVENTIVA","Todas las instalaciones","06/03/2026","Vicerrector administrativo","Pedro Gutiérrez y Ducleys Henao","07/03/2026","1","1","07/03/2026","SI",""],
+    ["Construcción de parque de la vitamina N","PROYECTO","Parque de la vitamina N","05/03/2026","Vicerrector administrativo","José Moreno y personal rotativo","05/03/2026","120","","","",""],
+    ["Sanitario se rebosa; destapar","CORRECTIVA","Kiosco 5","03/03/2026","Heidis Quevedo","Orlando Molina","03/03/2026","1","1","03/03/2026","SI",""],
+    ["Desbloquear computadores","CORRECTIVA","Sala de Digital IA","03/03/2026","Derian Hernández","Luis Castrillo","03/03/2026","4","4","06/03/2026","SI",""],
+    ["Arreglo de techo","PREVENTIVA","Kiosco 29","03/03/2026","Vicerrector administrativo","Orlando Molina","17/03/2026","3","3","18/03/2026","SI",""],
+    ["Arreglo de techo","PREVENTIVA","Kiosco 19","03/03/2026","Vicerrector administrativo","Orlando Molina","07/03/2026","1","1","07/03/2026","",""],
+    ["Impermeabilización de plantilla para tanques","PROYECTO","Loma","25/02/2026","Vicerrector administrativo","Orlando Molina","03/03/2026","2","2","05/03/2026","SI","Se necesitó compra de xilol"],
+    ["Revisión de sanitario que se rebosa","CORRECTIVA","Kiosco 5","23/02/2026","Coordinadora de Calidad","José Moreno y Ducleys Henao","24/02/2026","1","1","24/02/2026","SI","Se necesitó compra de cemento blanco"],
+    ["Cambio de lámparas LED","CORRECTIVA","Salón de 11º","18/02/2026","Manuel Ribón","Josie Morales","23/02/2026","2","2","25/02/2026","SI",""],
+    ["Destapar desagüe de sanitario","CORRECTIVA","Kiosco 5","18/02/2026","Yolanda De La Hoz","José Moreno","18/02/2026","1","1","18/02/2026","SI","Se encontraron paños húmedos y raíces"],
+    ["Jornada de aseo y limpieza","PROYECTO","Futuro cuarto de aseo","23/01/2026","Coordinadora de Calidad y ARL SURA","Pedro Gutiérrez y Ducleys Henao","23/01/2026","2","1","23/01/2026","SI","Quedó pendiente lavado de techo y paredes"],
+    ["Cambio de tarjeta de TV","CORRECTIVA","Kiosco 7 y Kiosco 21","22/01/2026","Coordinadora de Calidad","Jorge Montenegro","23/01/2026","8","7","29/01/2026","SI","Se cambió tarjeta fuente de ambos televisores"],
+    ["Cambio de cable UTP","PREVENTIVA","Kiosco 34 al Kiosco 36","09/12/2025","Luis Castrillo","Luis Castrillo","09/12/2025","1","1","09/12/2025","SI","Se usó cable UTP del inventario"],
+    ["Poda de swinglia con letras IDPHU","PROYECTO","Entrada principal","25/11/2025","Vicerrector administrativo","Andrés Fontalvo","26/11/2025","8","8","04/12/2025","SI",""],
+    ["Remodelación de enfermería","PREVENTIVA","Enfermería","18/11/2025","Vicerrector administrativo","José Moreno y Josie Morales","20/11/2025","45","40","08/01/2026","SI","Compras de materiales en varias fechas"],
+    ["Cambio de bombillos","RUTINARIA","Baños del castillo y coliseo","10/11/2025","Ambrosio Garcés","Josie Morales","10/11/2025","1","1","10/11/2025","SI","Se usaron bombillos del inventario"],
+    ["Construcción de fuente de agua","PROYECTO","Debajo del puente ecológico","17/10/2025","Vicerrector administrativo","José Moreno y Josie Morales","21/10/2025","30","22","15/11/2025","SI","Se necesitaron materiales"],
+    ["Construcción de puente","PROYECTO","Acceso a nuevo parque proyectado","22/09/2025","Vicerrector administrativo","Juan Carlos Vizcaíno","26/09/2025","5","4","30/09/2025","SI",""],
+    ["Cambio de bomba sumergible","CORRECTIVA","Pozo","18/09/2025","Vicerrector administrativo","Nayib Quesep y cuadrilla interna","23/09/2025","1","1","23/09/2025","SI","Compra de bomba y elementos eléctricos"],
+    ["Remodelación de batería de baños","PROYECTO","Baños de la pecera","01/08/2025","Vicerrector administrativo","Juan Carlos Vizcaíno","02/08/2025","15","10","11/08/2025","SI","Pintura, puertas, mesón, sanitarios y plumas"]
+  ];
+
+  /* ==========================================================
+     2. ESTRUCTURA NORMALIZADA DE LOS REGISTROS
+     ========================================================== */
+
+  const HEADERS = [
+    "Actividad","Tipo","Ubicacion","FechaReporte","Reporta",
+    "PersonalAsignado","FechaInicio","TiempoProgramado",
+    "TiempoReal","FechaEntrega","Realizado","Observaciones"
+  ];
+
+  const ORIGINAL_HEADERS = [
+    "ACTIVIDAD A REALIZAR","TIPO DE ACTIVIDAD","UBICACIÓN",
+    "FECHA DE REPORTE O PROGRAMACIÓN","QUIEN REALIZA REPORTE O PROGRAMACIÓN",
+    "PERSONAL ASIGNADO","FECHA DE INICIO","TIEMPO DE EJECUCIÓN PROGRAMADO",
+    "TIEMPO DE EJECUCIÓN REAL","FECHA DE ENTREGA","REALIZADO","OBSERVACIONES"
+  ];
+
+  let allData = DEMO.map(rowToObject);
+  let filteredData = [];
+  let page = 1;
+  const PAGE_SIZE = 10;
+  const charts = {};
+
+  // Convierte las filas de demostración en objetos de JavaScript.
+  function rowToObject(r) {
+    return Object.fromEntries(HEADERS.map((h, i) => [h, String(r[i] ?? "").trim()]));
+  }
+
+  // Normaliza textos para reconocer encabezados aunque tengan tildes.
+  function norm(s) {
+    return String(s ?? "").normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  // Convierte fechas DD/MM/AAAA o AAAA-MM-DD en un formato comparable.
+  function dateISO(s) {
+    if (!s) return "";
+    const t = String(s).trim();
+    let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+    if (m) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;
+    m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+    return "";
+  }
+
+  // Formatea una fecha para presentarla de manera legible.
+  function showDate(s) {
+    const iso = dateISO(s);
+    if (!iso) return s || "—";
+    const [y,m,d] = iso.split("-");
+    return `${d}/${m}/${y}`;
+  }
+
+  // Considera SI, X, SÍ, TRUE y 1 como confirmación positiva.
+  function isDone(r) {
+    return ["SI","SÍ","X","TRUE","1","YES"].includes(
+      String(r.Realizado).trim().toUpperCase()
+    );
+  }
+
+  // Una duración es válida cuando es numérica y no negativa.
+  function validNumber(v) {
+    if (v === "" || v === null || v === undefined) return false;
+    return Number.isFinite(Number(v)) && Number(v) >= 0;
+  }
+
+  function durationRows(rows) {
+    return rows.filter(r => validNumber(r.TiempoProgramado) &&
+                            validNumber(r.TiempoReal));
+  }
+
+  function uniqueSorted(values) {
+    return [...new Set(values.filter(Boolean))]
+      .sort((a,b) => a.localeCompare(b, "es"));
+  }
+
+  /* ==========================================================
+     3. CONFIGURACIÓN DINÁMICA DE LOS FILTROS
+     ========================================================== */
+
+  function fillSelect(id, values, firstLabel) {
+    const el = document.getElementById(id);
+    const old = el.value;
+    el.innerHTML = "";
+    el.add(new Option(firstLabel, ""));
+    values.forEach(v => el.add(new Option(v, v)));
+    if (values.includes(old)) el.value = old;
+  }
+
+  function refreshFilterOptions() {
+    fillSelect("typeFilter", uniqueSorted(allData.map(r => r.Tipo)), "Todos los tipos");
+    fillSelect("locationFilter", uniqueSorted(allData.map(r => r.Ubicacion)), "Todas las ubicaciones");
+    fillSelect("yearFilter", uniqueSorted(allData.map(r => {
+      const d = dateISO(r.FechaReporte);
+      return d ? d.slice(0,4) : "";
+    })).sort(), "Todos los años");
+  }
+
+  // Aplica los filtros comunes a indicadores, gráficos y tabla.
+  function applyFilters() {
+    const q = norm(document.getElementById("search").value);
+    const type = document.getElementById("typeFilter").value;
+    const loc = document.getElementById("locationFilter").value;
+    const status = document.getElementById("statusFilter").value;
+    const from = document.getElementById("fromDate").value;
+    const to = document.getElementById("toDate").value;
+    const year = document.getElementById("yearFilter").value;
+    const sort = document.getElementById("sortFilter").value;
+
+    filteredData = allData.filter(r => {
+      const searchText = norm(Object.values(r).join(" "));
+      const d = dateISO(r.FechaReporte);
+      if (q && !searchText.includes(q)) return false;
+      if (type && r.Tipo !== type) return false;
+      if (loc && r.Ubicacion !== loc) return false;
+      if (status === "done" && !isDone(r)) return false;
+      if (status === "pending" && isDone(r)) return false;
+      if (from && (!d || d < from)) return false;
+      if (to && (!d || d > to)) return false;
+      if (year && (!d || d.slice(0,4) !== year)) return false;
+      return true;
+    });
+
+    // Ordena los registros sin modificar la base original.
+    filteredData.sort((a,b) => {
+      if (sort === "activity") return a.Actividad.localeCompare(b.Actividad, "es");
+      const da = dateISO(a.FechaReporte) || "";
+      const db = dateISO(b.FechaReporte) || "";
+      return sort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
+    });
+
+    page = 1;
+    renderAll();
+  }
+
+  function resetFilters() {
+    ["search","typeFilter","locationFilter","statusFilter",
+     "fromDate","toDate","yearFilter"].forEach(id => {
+      document.getElementById(id).value = "";
+    });
+    document.getElementById("sortFilter").value = "desc";
+    applyFilters();
+  }
+
+  /* ==========================================================
+     4. INDICADORES KPI
+     ========================================================== */
+
+  function renderKPIs(rows) {
+    const done = rows.filter(isDone).length;
+    const pending = rows.length - done;
+    const known = durationRows(rows);
+
+    // Se compara la duración real con la programada en los registros válidos.
+    const onTime = known.filter(r =>
+      Number(r.TiempoReal) <= Number(r.TiempoProgramado)
+    ).length;
+
+    const pctDone = rows.length ? done / rows.length * 100 : 0;
+    const pctTime = known.length ? onTime / known.length * 100 : null;
+
+    document.getElementById("kTotal").textContent = rows.length;
+    document.getElementById("kDone").textContent = done;
+    document.getElementById("kPending").textContent = pending;
+    document.getElementById("kDoneFoot").textContent =
+      `${pctDone.toLocaleString("es-CO",{maximumFractionDigits:1})}% de los registros con cierre confirmado.`;
+
+    document.getElementById("kTime").textContent =
+      pctTime === null ? "—" :
+      `${pctTime.toLocaleString("es-CO",{maximumFractionDigits:1})}%`;
+
+    document.getElementById("tableSummary").textContent =
+      `${rows.length} registros encontrados · ${done} confirmados como realizados.`;
+  }
+
+  /* ==========================================================
+     5. MOTOR DE GRÁFICOS
+     Todos los gráficos se regeneran con los filtros activos.
+     ========================================================== */
+
+  function makeChart(id, type, labels, datasets, extra = {}) {
+    // Destruye el gráfico anterior para evitar superposiciones.
+    if (charts[id]) charts[id].destroy();
+
+    const ctx = document.getElementById(id);
+    charts[id] = new Chart(ctx, {
+      type,
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 250 },
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: datasets.length > 1, position: "bottom" },
+          tooltip: { enabled: true }
+        },
+        scales: type === "doughnut" ? {} : {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        },
+        ...extra
+      }
+    });
+  }
+
+  // Agrupa los registros por mes a partir de la fecha de reporte.
+  function monthlyCounts(rows) {
+    const map = {};
+    rows.forEach(r => {
+      const d = dateISO(r.FechaReporte);
+      if (!d) return;
+      const month = d.slice(0,7);
+      map[month] = (map[month] || 0) + 1;
+    });
+    const keys = Object.keys(map).sort();
+    return { labels: keys, values: keys.map(k => map[k]) };
+  }
+
+  function groupCount(rows, field) {
+    const map = {};
+    rows.forEach(r => {
+      const key = r[field] || "Sin dato";
+      map[key] = (map[key] || 0) + 1;
+    });
+    return Object.entries(map).sort((a,b) => b[1]-a[1]);
+  }
+
+  function renderCharts(rows) {
+    const month = monthlyCounts(rows);
+
+    // Línea: ayuda a observar tendencias temporales.
+    makeChart("trendChart", "line", month.labels, [{
+      label: "Actividades reportadas",
+      data: month.values,
+      borderColor: "#2563eb",
+      backgroundColor: "#2563eb22",
+      fill: true,
+      tension: .3,
+      pointRadius: 3
+    }]);
+
+    // Barras: comparación de volumen por tipo.
+    const types = groupCount(rows, "Tipo");
+    makeChart("typeChart", "bar", types.map(x => x[0]), [{
+      label: "Cantidad",
+      data: types.map(x => x[1]),
+      backgroundColor: ["#2563eb","#0f766e","#ea580c","#64748b"]
+    }]);
+
+    // Dona: composición entre actividades realizadas y pendientes.
+    makeChart("statusChart", "doughnut",
+      ["Realizadas","Pendientes / por confirmar"],
+      [{
+        data: [rows.filter(isDone).length, rows.filter(r => !isDone(r)).length],
+        backgroundColor: ["#16a34a","#f59e0b"],
+        borderWidth: 0
+      }]);
+
+    // Comparación de duraciones solo para registros con ambos datos.
+    const valid = durationRows(rows);
+    const byType = uniqueSorted(valid.map(r => r.Tipo));
+    const avg = (type, field) => {
+      const group = valid.filter(r => r.Tipo === type);
+      return group.length ?
+        group.reduce((sum,r) => sum + Number(r[field]),0) / group.length : 0;
+    };
+
+    makeChart("durationChart", "bar", byType, [
+      {
+        label: "Duración programada (promedio)",
+        data: byType.map(t => avg(t,"TiempoProgramado")),
+        backgroundColor: "#93c5fd"
+      },
+      {
+        label: "Duración real (promedio)",
+        data: byType.map(t => avg(t,"TiempoReal")),
+        backgroundColor: "#0f766e"
+      }
+    ]);
+
+    // Barras horizontales: ubicaciones con más actividad.
+    const locations = groupCount(rows, "Ubicacion").slice(0,10);
+    makeChart("locationChart", "bar", locations.map(x => x[0]), [{
+      label: "Cantidad de registros",
+      data: locations.map(x => x[1]),
+      backgroundColor: "#2563eb"
+    }], {
+      indexAxis: "y",
+      plugins: { legend: { display: false } }
+    });
+
+    // Tendencia mensual de las duraciones totales reportadas.
+    const durationsByMonth = {};
+    valid.forEach(r => {
+      const d = dateISO(r.FechaReporte);
+      if (!d) return;
+      const m = d.slice(0,7);
+      if (!durationsByMonth[m]) durationsByMonth[m] = {planned:0, real:0};
+      durationsByMonth[m].planned += Number(r.TiempoProgramado);
+      durationsByMonth[m].real += Number(r.TiempoReal);
+    });
+
+    const durationMonths = Object.keys(durationsByMonth).sort();
+    makeChart("monthlyDurationChart", "line", durationMonths, [
+      {
+        label: "Tiempo programado",
+        data: durationMonths.map(m => durationsByMonth[m].planned),
+        borderColor: "#2563eb",
+        tension: .25
+      },
+      {
+        label: "Tiempo real",
+        data: durationMonths.map(m => durationsByMonth[m].real),
+        borderColor: "#ea580c",
+        tension: .25
+      }
+    ]);
+  }
+
+  /* ==========================================================
+     6. HALLAZGOS AUTOMÁTICOS PARA APOYAR LA INTERPRETACIÓN
+     No reemplazan el análisis del responsable del proceso.
+     ========================================================== */
+
+  function renderInsights(rows) {
+    const done = rows.filter(isDone).length;
+    const pending = rows.length - done;
+    const valid = durationRows(rows);
+    const exceeded = valid.filter(r =>
+      Number(r.TiempoReal) > Number(r.TiempoProgramado)
+    );
+    const byType = groupCount(rows, "Tipo");
+    const byLocation = groupCount(rows, "Ubicacion");
+    const noDates = rows.filter(r => !dateISO(r.FechaReporte)).length;
+    const missingTime = rows.filter(r =>
+      !validNumber(r.TiempoProgramado) || !validNumber(r.TiempoReal)
+    ).length;
+
+    const items = [
+      `<strong>Estado de ejecución:</strong> ${done} actividades aparecen confirmadas como realizadas y ${pending} requieren verificar su estado de cierre.`,
+      `<strong>Calidad de datos:</strong> ${missingTime} registros no tienen ambos valores de duración numéricos; ${noDates} carecen de una fecha de reporte interpretable.`,
+      `<strong>Control de duración:</strong> ${exceeded.length} de ${valid.length} actividades con tiempos completos registran una duración real superior a la programada.`,
+      byType.length
+        ? `<strong>Tipo predominante:</strong> ${escapeHTML(byType[0][0])}, con ${byType[0][1]} registro(s) en la selección.`
+        : `<strong>Tipo predominante:</strong> no hay registros para clasificar.`,
+      byLocation.length
+        ? `<strong>Ubicación con mayor frecuencia:</strong> ${escapeHTML(byLocation[0][0])}, con ${byLocation[0][1]} registro(s).`
+        : `<strong>Ubicación:</strong> no hay registros para comparar.`
+    ];
+
+    document.getElementById("insights").innerHTML =
+      items.map(t => `<div style="padding:12px 0;border-bottom:1px solid #e2e8f0;line-height:1.7">${t}</div>`).join("");
+  }
+
+  /* ==========================================================
+     7. TABLA, ESTADOS Y PAGINACIÓN
+     ========================================================== */
+
+  // Escapa caracteres para mostrar los datos sin interpretar HTML del archivo.
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[c]));
+  }
+
+  function statusPill(r) {
+    if (isDone(r)) return '<span class="pill pill-green">Realizada</span>';
+    if (!r.FechaInicio && !r.TiempoProgramado)
+      return '<span class="pill pill-gray">Sin confirmar</span>';
+    if (!r.FechaEntrega)
+      return '<span class="pill pill-orange">Pendiente de cierre</span>';
+    return '<span class="pill pill-blue">Verificar estado</span>';
+  }
+
+  function typePill(type) {
+    const color = {
+      "PREVENTIVA":"pill-green",
+      "CORRECTIVA":"pill-orange",
+      "PROYECTO":"pill-blue",
+      "RUTINARIA":"pill-gray"
+    }[type] || "pill-gray";
+    return `<span class="pill ${color}">${escapeHTML(type || "Sin tipo")}</span>`;
+  }
+
+  function renderTable(rows) {
+    const start = (page-1) * PAGE_SIZE;
+    const shown = rows.slice(start, start + PAGE_SIZE);
+    const body = document.getElementById("tableBody");
+
+    if (!shown.length) {
+      body.innerHTML = '<tr><td colspan="11" class="empty">No hay registros con los filtros actuales.</td></tr>';
+    } else {
+      body.innerHTML = shown.map(r => `
+        <tr>
+          <td><strong>${escapeHTML(r.Actividad)}</strong></td>
+          <td>${typePill(r.Tipo)}</td>
+          <td>${escapeHTML(r.Ubicacion || "—")}</td>
+          <td>${escapeHTML(showDate(r.FechaReporte))}</td>
+          <td>${escapeHTML(r.PersonalAsignado || "—")}</td>
+          <td>${escapeHTML(showDate(r.FechaInicio))}</td>
+          <td>${escapeHTML(r.TiempoProgramado || "—")}</td>
+          <td>${escapeHTML(r.TiempoReal || "—")}</td>
+          <td>${escapeHTML(showDate(r.FechaEntrega))}</td>
+          <td>${statusPill(r)}</td>
+          <td>${escapeHTML(r.Observaciones || "—")}</td>
+        </tr>`).join("");
+    }
+
+    const pages = Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
+    document.getElementById("pageInfo").textContent =
+      `Página ${page} de ${pages} · ${rows.length} registros`;
+  }
+
+  function changePage(step) {
+    const pages = Math.max(1, Math.ceil(filteredData.length/PAGE_SIZE));
+    page = Math.min(pages, Math.max(1, page + step));
+    renderTable(filteredData);
+  }
+
+  /* ==========================================================
+     8. EXPORTAR LOS REGISTROS FILTRADOS A CSV
+     El archivo puede abrirse en Excel.
+     ========================================================== */
+
+  function csvCell(value) {
+    // Las comillas protegen comas, saltos de línea y comillas internas.
+    return '"' + String(value ?? "").replace(/"/g,'""') + '"';
+  }
+
+  function exportCSV() {
+    const rows = filteredData;
+    if (!rows.length) {
+      alert("No hay registros para exportar.");
+      return;
+    }
+
+    const csv = [
+      ORIGINAL_HEADERS.map(csvCell).join(";"),
+      ...rows.map(r => [
+        r.Actividad, r.Tipo, r.Ubicacion, r.FechaReporte, r.Reporta,
+        r.PersonalAsignado, r.FechaInicio, r.TiempoProgramado,
+        r.TiempoReal, r.FechaEntrega, r.Realizado, r.Observaciones
+      ].map(csvCell).join(";"))
+    ].join("\r\n");
+
+    // BOM para mejorar la compatibilidad con tildes en Excel.
+    const blob = new Blob(["\ufeff" + csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mantenimiento_IDPHU_filtrado.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadTemplate() {
+    const template = "\ufeff" + ORIGINAL_HEADERS.map(csvCell).join(";") + "\r\n";
+    const blob = new Blob([template], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "plantilla_mantenimiento_IDPHU.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ==========================================================
+     9. IMPORTACIÓN CSV / TSV
+     Reconoce los encabezados por su nombre normalizado.
+     ========================================================== */
+
+  // Parser de CSV compatible con comillas, delimitadores y saltos de línea.
+  function parseDelimited(text, delimiter) {
+    const rows = [];
+    let row = [], field = "", quoted = false;
+
+    for (let i=0; i<text.length; i++) {
+      const c = text[i];
+
+      if (c === '"' && quoted && text[i+1] === '"') {
+        field += '"'; i++;
+      } else if (c === '"') {
+        quoted = !quoted;
+      } else if (c === delimiter && !quoted) {
+        row.push(field); field = "";
+      } else if ((c === "\n" || c === "\r") && !quoted) {
+        if (c === "\r" && text[i+1] === "\n") i++;
+        row.push(field);
+        if (row.some(v => v.trim() !== "")) rows.push(row);
+        row = []; field = "";
+      } else {
+        field += c;
+      }
+    }
+
+    row.push(field);
+    if (row.some(v => v.trim() !== "")) rows.push(row);
+    return rows;
+  }
+
+  // Busca la columna original por equivalencias de encabezados.
+  const HEADER_ALIASES = {
+    Actividad: ["actividadarealizar","actividad","tarea"],
+    Tipo: ["tipodeactividad","tipo","tipomantenimiento"],
+    Ubicacion: ["ubicacion","lugar"],
+    FechaReporte: ["fechadereporteoprogramacion","fechadereporte","fechaprogramacion"],
+    Reporta: ["quienrealizareporteoprogramacion","quienreporta","reportapor","responsabledelreporte"],
+    PersonalAsignado: ["personalasignado","responsable","tecnicoasignado"],
+    FechaInicio: ["fechadeinicio","fechainicio"],
+    TiempoProgramado: ["tiempodeejecucionprogramado","tiempoprogramado","duracionprogramada"],
+    TiempoReal: ["tiempodeejecucionreal","tiemporeal","duracionreal"],
+    FechaEntrega: ["fechadeentrega","fechaentrega"],
+    Realizado: ["realizado","si","estado"],
+    Observaciones: ["observaciones","observacion","comentarios"]
+  };
+
+  function importText(text) {
+    // Determina si el contenido viene separado por tabulaciones o por CSV.
+    const firstLine = text.split(/\r?\n/)[0] || "";
+    const delimiter = firstLine.includes("\t") ? "\t" :
+      (firstLine.includes(";") ? ";" : ",");
+    const matrix = parseDelimited(text.replace(/^\uFEFF/, ""), delimiter);
+
+    if (matrix.length < 2) {
+      throw new Error("No se encontraron encabezados y registros suficientes.");
+    }
+
+    const headers = matrix[0].map(norm);
+    const indexes = {};
+
+    Object.entries(HEADER_ALIASES).forEach(([key, aliases]) => {
+      indexes[key] = headers.findIndex(h =>
+        aliases.some(a => h === norm(a))
+      );
+    });
+
+    if (indexes.Actividad < 0) {
+      throw new Error("No se encontró la columna de actividad. Revisa los encabezados.");
+    }
+
+    const rows = matrix.slice(1).map(line => {
+      const obj = {};
+      HEADERS.forEach(key => {
+        const index = indexes[key];
+        obj[key] = index >= 0 ? String(line[index] ?? "").trim() : "";
+      });
+
+      // Normaliza el estado SI/NO, manteniendo los registros no confirmados.
+      obj.Realizado = obj.Realizado.toUpperCase() === "X" ? "SI" : obj.Realizado;
+      return obj;
+    }).filter(r => r.Actividad);
+
+    if (!rows.length) throw new Error("No se encontraron actividades válidas.");
+
+    allData = rows;
+    refreshFilterOptions();
+    resetFilters();
+
+    document.getElementById("importStatus").textContent =
+      `Importación exitosa: ${rows.length} registros cargados.`;
+  }
+
+  document.getElementById("fileInput").addEventListener("change", async event => {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      importText(await file.text());
+    } catch (err) {
+      document.getElementById("importStatus").textContent =
+        "No fue posible importar: " + err.message;
+    }
+  });
+
+  function importPastedData() {
+    try {
+      importText(document.getElementById("pasteArea").value);
+    } catch (err) {
+      document.getElementById("importStatus").textContent =
+        "No fue posible procesar los datos: " + err.message;
+    }
+  }
+
+  function resetDemo() {
+    allData = DEMO.map(rowToObject);
+    refreshFilterOptions();
+    resetFilters();
+    document.getElementById("importStatus").textContent =
+      "Se restauró la muestra de demostración.";
+  }
+
+  /* ==========================================================
+     10. NAVEGACIÓN ENTRE VISTAS
+     ========================================================== */
+
+  function showView(id) {
+    document.querySelectorAll(".view").forEach(el =>
+      el.classList.toggle("active", el.id === id)
+    );
+
+    document.querySelectorAll("[data-view]").forEach(el =>
+      el.classList.toggle("active", el.dataset.view === id)
+    );
+
+    const titles = {
+      resumen:"Resumen ejecutivo",
+      analisis:"Análisis y tendencias",
+      registros:"Registro de actividades",
+      datos:"Datos e importación"
+    };
+    document.getElementById("pageTitle").textContent = titles[id] || "Dashboard";
+  }
+
+  document.querySelectorAll("[data-view]").forEach(button => {
+    button.addEventListener("click", () => showView(button.dataset.view));
+  });
+
+  // Actualiza el dashboard cuando cambia cualquier filtro.
+  ["search","typeFilter","locationFilter","statusFilter",
+   "fromDate","toDate","yearFilter","sortFilter"].forEach(id => {
+    document.getElementById(id).addEventListener(
+      id === "search" ? "input" : "change", applyFilters
+    );
+  });
+
+  /* ==========================================================
+     11. ACTUALIZACIÓN GLOBAL Y ARRANQUE
+     ========================================================== */
+
+  function renderAll() {
+    renderKPIs(filteredData);
+    renderCharts(filteredData);
+    renderInsights(filteredData);
+    renderTable(filteredData);
+  }
+
+  // Inicializa filtros y gráficos al abrir el archivo HTML.
+  refreshFilterOptions();
+  applyFilters();
+</script>
+</body>
+</html>
